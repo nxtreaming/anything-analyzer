@@ -22,6 +22,10 @@ interface ToolCall {
   function: { name: string; arguments: string };
 }
 
+interface ResponsesIncompleteDetails {
+  reason?: string;
+}
+
 // Anthropic content block types
 interface AnthropicTextBlock {
   type: "text";
@@ -561,9 +565,14 @@ export class LLMRouter {
     if (stream) return this.parseResponsesStream(response, onChunk!);
 
     const data = await this.safeParseJson<{
+      status?: string;
+      incomplete_details?: ResponsesIncompleteDetails;
       output_text?: string;
       usage?: { input_tokens: number; output_tokens: number };
     }>(response);
+    if (data.status === "incomplete") {
+      throw new Error(`Responses API incomplete: ${data.incomplete_details?.reason || "unknown"}`);
+    }
     return {
       content: data.output_text || "",
       promptTokens: data.usage?.input_tokens || 0,
@@ -706,6 +715,10 @@ export class LLMRouter {
       if (currentEvent === "response.completed" && parsed.response?.usage) {
         promptTokens = parsed.response.usage.input_tokens || 0;
         completionTokens = parsed.response.usage.output_tokens || 0;
+      }
+      if (currentEvent === "response.incomplete") {
+        const reason = parsed.response?.incomplete_details?.reason || "unknown";
+        throw new Error(`Responses API incomplete: ${reason}`);
       }
       if (currentEvent === "error" || currentEvent === "response.failed") {
         const errorMsg =

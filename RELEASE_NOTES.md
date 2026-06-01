@@ -1,16 +1,16 @@
-# Anything Analyzer v3.6.18
+# Anything Analyzer v3.6.19
 
 ## 修复
 
-- **Responses API 流式失败信息更准确** — 修复 `response.failed` SSE 将嵌套错误消息显示为 `Unknown stream error` 的问题
-  - 兼容 `response.error.message` 结构，保留现有顶层 `message` 和 `error.message` 处理
-  - 增加嵌套失败事件回归测试，确保模型过载等错误能直接反馈给调用方
+- **Responses API incomplete 状态显式报错** — 修复 `status: "incomplete"` 和 `response.incomplete` SSE 被当作成功响应的问题
+  - 非流式响应会携带 `incomplete_details.reason` 抛出明确错误
+  - 流式响应遇到 `response.incomplete` 会停止并返回截断原因，避免误用部分输出
 
 ## 下载
 
 | 平台 | 文件 |
 |------|------|
-| Windows | Anything-Analyzer-Setup-3.6.18.exe |
-| macOS (Apple Silicon) | Anything-Analyzer-3.6.18-arm64.dmg |
-| macOS (Intel) | Anything-Analyzer-3.6.18-x64.dmg |
-| Linux | Anything-Analyzer-3.6.18.AppImage |
+| Windows | Anything-Analyzer-Setup-3.6.19.exe |
+| macOS (Apple Silicon) | Anything-Analyzer-3.6.19-arm64.dmg |
+| macOS (Intel) | Anything-Analyzer-3.6.19-x64.dmg |
+| Linux | Anything-Analyzer-3.6.19.AppImage |

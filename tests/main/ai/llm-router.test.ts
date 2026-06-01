@@ -255,6 +255,23 @@ describe("LLMRouter", () => {
       expect(result.promptTokens).toBe(100);
       expect(result.completionTokens).toBe(200);
     });
+
+    it("should reject incomplete Responses API results", async () => {
+      const config: LLMProviderConfig = { ...baseConfig, apiType: "responses" };
+      fetchSpy.mockResolvedValueOnce(
+        createJSONResponse({
+          status: "incomplete",
+          incomplete_details: { reason: "max_output_tokens" },
+          output_text: "partial",
+        }),
+      );
+
+      const router = new LLMRouter(config);
+
+      await expect(
+        router.complete([{ role: "user", content: "test" }]),
+      ).rejects.toThrow("Responses API incomplete: max_output_tokens");
+    });
   });
 
   describe("completeResponses - streaming", () => {
@@ -360,6 +377,24 @@ describe("LLMRouter", () => {
       await expect(
         router.complete([{ role: "user", content: "test" }], () => {}),
       ).rejects.toThrow("Responses API stream error: model overloaded");
+    });
+
+    it("should reject when Responses API stream emits an incomplete event", async () => {
+      const config: LLMProviderConfig = { ...baseConfig, apiType: "responses" };
+      fetchSpy.mockResolvedValueOnce(
+        createSSEResponse([
+          {
+            event: "response.incomplete",
+            data: '{"response":{"incomplete_details":{"reason":"max_output_tokens"}}}',
+          },
+        ]),
+      );
+
+      const router = new LLMRouter(config);
+
+      await expect(
+        router.complete([{ role: "user", content: "test" }], () => {}),
+      ).rejects.toThrow("Responses API incomplete: max_output_tokens");
     });
   });
 
