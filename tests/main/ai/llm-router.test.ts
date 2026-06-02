@@ -671,6 +671,24 @@ describe("LLMRouter", () => {
         router.complete([{ role: "user", content: "test" }], () => {}),
       ).rejects.toThrow("Responses API incomplete: max_output_tokens");
     });
+
+    it("should reject completed Responses API streams without output text", async () => {
+      const config: LLMProviderConfig = { ...baseConfig, apiType: "responses" };
+      fetchSpy.mockResolvedValueOnce(
+        createSSEResponse([
+          {
+            event: "response.completed",
+            data: '{"response":{"usage":{"input_tokens":1,"output_tokens":0}}}',
+          },
+        ]),
+      );
+
+      const router = new LLMRouter(config);
+
+      await expect(
+        router.complete([{ role: "user", content: "test" }], () => {}),
+      ).rejects.toThrow("LLM 响应格式异常: 缺少 output_text 字段");
+    });
   });
 
   describe("completeOpenAI - streaming", () => {
@@ -708,6 +726,23 @@ describe("LLMRouter", () => {
       await expect(
         router.complete([{ role: "user", content: "test" }], () => {}),
       ).rejects.toThrow("OpenAI stream error: quota exceeded");
+    });
+
+    it("should reject completed OpenAI chat streams without content", async () => {
+      fetchSpy.mockResolvedValueOnce(
+        createSSEResponse([
+          {
+            data: '{"choices":[{"delta":{}}],"usage":{"prompt_tokens":1,"completion_tokens":0}}',
+          },
+          { data: "[DONE]" },
+        ]),
+      );
+
+      const router = new LLMRouter(baseConfig);
+
+      await expect(
+        router.complete([{ role: "user", content: "test" }], () => {}),
+      ).rejects.toThrow("LLM 响应格式异常: 缺少 message.content 字段");
     });
   });
 
@@ -760,6 +795,29 @@ describe("LLMRouter", () => {
 
       expect(chunks).toEqual(["final anthropic chunk"]);
       expect(result.content).toBe("final anthropic chunk");
+    });
+
+    it("should reject completed Anthropic streams without text content", async () => {
+      const config: LLMProviderConfig = {
+        name: "minimax",
+        baseUrl: "https://api.minimax.io/anthropic/v1",
+        apiKey: "test-minimax-key",
+        model: "MiniMax-M2.7",
+        maxTokens: 4096,
+      };
+      fetchSpy.mockResolvedValueOnce(
+        createSSEResponse([
+          {
+            data: '{"type":"message_delta","usage":{"output_tokens":0}}',
+          },
+        ]),
+      );
+
+      const router = new LLMRouter(config);
+
+      await expect(
+        router.complete([{ role: "user", content: "test" }], () => {}),
+      ).rejects.toThrow("LLM 响应格式异常: 缺少 text content 字段");
     });
   });
 });

@@ -79,6 +79,13 @@ function readResponsesOutputText(data: {
   return content;
 }
 
+function requireLLMContent(content: string, fieldName: string): string {
+  if (content.length === 0) {
+    throw new Error(`LLM 响应格式异常: 缺少 ${fieldName} 字段`);
+  }
+  return content;
+}
+
 /**
  * Sanitize string content in LLM request body to remove control characters
  * that may break JSON parsing in intermediate proxies.
@@ -765,7 +772,7 @@ export class LLMRouter {
       for (const line of lines) processLine(line);
     }
     if (buffer) processLine(buffer);
-    return { content: fullContent, promptTokens, completionTokens };
+    return { content: requireLLMContent(fullContent, "message.content"), promptTokens, completionTokens };
   }
 
   private async parseResponsesStream(
@@ -829,7 +836,7 @@ export class LLMRouter {
       for (const line of lines) processLine(line);
     }
     if (buffer) processLine(buffer);
-    return { content: fullContent, promptTokens, completionTokens };
+    return { content: requireLLMContent(fullContent, "output_text"), promptTokens, completionTokens };
   }
 
   private async parseAnthropicStream(
@@ -877,7 +884,7 @@ export class LLMRouter {
       for (const line of lines) processLine(line);
     }
     if (buffer) processLine(buffer);
-    return { content: fullContent, promptTokens, completionTokens };
+    return { content: requireLLMContent(fullContent, "text content"), promptTokens, completionTokens };
   }
 
   private async fetchWithRetry(

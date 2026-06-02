@@ -1,16 +1,16 @@
-# Anything Analyzer v3.6.32
+# Anything Analyzer v3.6.33
 
 ## 修复
 
-- **Anthropic 工具调用空文本诊断** — 避免工具调用最终轮次缺少 `text` 内容时被误判为空成功结果
-  - Anthropic/MiniMax 工具调用循环现在要求最终响应至少包含一个 `text` content block
-  - 新增回归测试覆盖工具调用后返回非文本内容块的异常路径
+- **流式空文本响应诊断** — 避免流式响应完成但没有输出文本时被误判为空成功结果
+  - OpenAI Chat、Responses API、Anthropic/MiniMax 流式解析现在都会在空文本结果时抛出明确格式错误
+  - 新增回归测试覆盖三个流式接口只完成、不输出文本的异常路径
 
 ## 下载
 
 | 平台 | 文件 |
 |------|------|
-| Windows | Anything-Analyzer-Setup-3.6.32.exe |
-| macOS (Apple Silicon) | Anything-Analyzer-3.6.32-arm64.dmg |
-| macOS (Intel) | Anything-Analyzer-3.6.32-x64.dmg |
-| Linux | Anything-Analyzer-3.6.32.AppImage |
+| Windows | Anything-Analyzer-Setup-3.6.33.exe |
+| macOS (Apple Silicon) | Anything-Analyzer-3.6.33-arm64.dmg |
+| macOS (Intel) | Anything-Analyzer-3.6.33-x64.dmg |
+| Linux | Anything-Analyzer-3.6.33.AppImage |
